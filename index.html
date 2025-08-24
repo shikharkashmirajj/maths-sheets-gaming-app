@@ -1,16 +1,412 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Maths Sheets Gaming App</title>
+
+  <!-- PWA goodies (already in your repo) -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0f172a" />
+
+  <style>
+    :root{
+      --bg:#070b14; --panel:#0f172a; --panel-2:#111b2f; --text:#e6edf6; --muted:#98a6bd;
+      --accent:#22c55e; --accent-2:#16a34a; --warning:#f59e0b; --danger:#ef4444; --card:#0b1324;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0; background:radial-gradient(1200px 800px at 15% -10%, #123 0%, #070b14 60%); color:var(--text); font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; min-height:100%;}
+    .wrap{max-width:1100px; margin:24px auto; padding:0 16px;}
+    .topbar{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px}
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#22c55e, #84cc16); display:grid; place-items:center; font-weight:900; color:#0b120e; box-shadow:0 10px 30px rgba(34,197,94,.25)}
+    h1{font-size:20px; margin:0}
+    .muted{color:var(--muted); font-size:12px}
+    .badges{display:flex; gap:8px; flex-wrap:wrap}
+    .pill{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); padding:8px 12px; border-radius:999px; display:inline-flex; align-items:center; gap:8px; font-weight:700}
+    .pill b{font-variant-numeric: tabular-nums}
+    .grid{display:grid; gap:16px}
+    .grid-3{grid-template-columns:1fr}
+    @media(min-width:960px){ .grid-3{grid-template-columns: 1.2fr .8fr } }
+
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.10); border-radius:18px; padding:16px; box-shadow: 0 1px 0 rgba(255,255,255,.06) inset;}
+    .card h2{margin:.2rem 0 0.6rem 0; font-size:18px}
+    .topics{display:grid; gap:12px; grid-template-columns: 1fr; }
+    @media(min-width:700px){ .topics{grid-template-columns: 1fr 1fr; } }
+    .topic{background:var(--panel); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:12px; display:flex; align-items:center; gap:12px; position:relative; overflow:hidden}
+    .topic .em{font-size:20px}
+    .topic h3{margin:0; font-size:16px}
+    .topic small{color:var(--muted)}
+    .btn{appearance:none; border:none; border-radius:12px; padding:10px 12px; font-weight:700; cursor:pointer; background:var(--accent); color:#052611; box-shadow:0 10px 24px rgba(34,197,94,.25)}
+    .btn:hover{filter:brightness(1.05)}
+    .btn.ghost{background:transparent; color:var(--text); border:1px solid rgba(255,255,255,.14); box-shadow:none}
+    .btn.danger{background:var(--danger); color:#210a0a}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap}
+    .progress{height:12px; background:#0a1222; border:1px solid rgba(255,255,255,.10); border-radius:999px; overflow:hidden}
+    .progress>div{height:100%; background:linear-gradient(90deg,#22c55e,#84cc16)}
+    .list{display:grid; gap:8px}
+    .tiny{font-size:11px; color:var(--muted)}
+    .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#0b1324; border:1px solid rgba(255,255,255,.15); padding:10px 14px; border-radius:12px; display:none}
+    .toast.show{display:block; animation: pop .25s ease-out}
+    @keyframes pop{from{transform:translateX(-50%) scale(.96); opacity:.6} to{transform:translateX(-50%) scale(1); opacity:1}}
+    .badge-tier{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14)}
+    .tier-bronze{background:linear-gradient(135deg,#9a6b37,#6f4b22)}
+    .tier-silver{background:linear-gradient(135deg,#c8d0d9,#8f9aa6); color:#0b1118}
+    .tier-gold{background:linear-gradient(135deg,#f6c453,#c99b19); color:#1e1602}
+    .tier-master{background:linear-gradient(135deg,#7c3aed,#22c55e)}
+    .sep{height:1px; background:rgba(255,255,255,.10); margin:10px 0}
+  </style>
 </head>
 <body>
-  <h1>Maths Sheets Gaming App</h1>
-  <p>Your study tracker is working via GitHub + Vercel!</p>
-  <script src="/service-worker.js"></script>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">MS</div>
+        <div>
+          <h1>Maths Sheets Gaming App</h1>
+          <div class="muted">Gamified SSC CGL practice • Works offline (PWA)</div>
+        </div>
+      </div>
+      <div class="badges">
+        <span class="pill">🔥 Streak: <b id="streak">0</b>d</span>
+        <span class="pill">⭐ Points: <b id="points">0</b></span>
+        <span class="pill" id="rankPill">🏅 Rank: <b id="rankName">Newbie</b></span>
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+      <!-- LEFT: Topics -->
+      <section class="card">
+        <h2>🎯 Today’s Quests <span class="muted" id="today"></span></h2>
+        <div class="topics" id="topics"></div>
+
+        <div class="sep"></div>
+        <div class="row">
+          <div class="tiny">Each completion = <b>+10</b> pts • Hit <b>50</b>/<b>100</b>/<b>200</b>/<b>500</b> for badges</div>
+          <button class="btn ghost" id="undoBtn">↩️ Undo last</button>
+        </div>
+      </section>
+
+      <!-- RIGHT: Progress & Badges -->
+      <aside class="grid">
+        <section class="card">
+          <h2>📈 Progress</h2>
+          <div class="row">
+            <div>
+              <div class="muted">Points to next badge</div>
+              <div style="font-size:22px; font-weight:800" id="toNext">–</div>
+            </div>
+            <div class="badge-tier tier-bronze" id="tierView">🥉 Bronze</div>
+          </div>
+          <div class="progress" style="margin-top:8px">
+            <div id="progressBar" style="width:0%"></div>
+          </div>
+          <div class="tiny" id="tierDesc" style="margin-top:6px">Earn 50 pts for Bronze</div>
+        </section>
+
+        <section class="card">
+          <h2>🏆 Badge Cabinet</h2>
+          <div class="list" id="cabinet">
+            <!-- filled by JS -->
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>⚙️ Settings</h2>
+          <div class="list">
+            <button class="btn ghost" id="installBtn" style="display:none">📲 Install App</button>
+            <button class="btn danger" id="resetBtn">🧹 Reset all data</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">+10 points! 🔥</div>
+
+  <script>
+    // ------------------ Data & Helpers ------------------
+    const TOPICS = [
+      { key:"coordinate", name:"📐 Coordinate Geometry", emoji:"📐" },
+      { key:"numbers",    name:"🔢 Number System",       emoji:"🔢" },
+      { key:"hcf",        name:"➗ HCF",                  emoji:"➗" },
+      { key:"prob",       name:"🎲 Probability",         emoji:"🎲" },
+      { key:"stats",      name:"📊 Statistics",          emoji:"📊" },
+      { key:"surds",      name:"√ Surds",                emoji:"√"  },
+    ];
+
+    const BADGES = [
+      { tier:"Bronze",  need:50,  class:"tier-bronze",  icon:"🥉", desc:"Good start! 50 pts" },
+      { tier:"Silver",  need:100, class:"tier-silver",  icon:"🥈", desc:"Solid progress! 100 pts" },
+      { tier:"Gold",    need:200, class:"tier-gold",    icon:"🥇", desc:"Great grind! 200 pts" },
+      { tier:"Master",  need:500, class:"tier-master",  icon:"👑", desc:"You’re a beast! 500 pts" },
+    ];
+
+    const LSKEY = "msgapp-v1";
+    const todayKey = () => new Date().toISOString().slice(0,10);
+    const fmt = n => n.toLocaleString();
+
+    let state = load() || {
+      points: 0,
+      streak: 0,
+      lastActive: null,
+      lastAction: null, // for undo
+      // log format: { [date]: { [topicKey]: timesCompletedToday } }
+      log: {}
+    };
+
+    // Streak logic on load
+    bumpStreakIfNewDay();
+
+    // ------------------ UI Build ------------------
+    document.getElementById("today").textContent = `(${todayKey()})`;
+
+    const topicsEl = document.getElementById("topics");
+    TOPICS.forEach(t => topicsEl.appendChild(makeTopicCard(t)));
+
+    document.getElementById("points").textContent = fmt(state.points);
+    document.getElementById("streak").textContent = fmt(state.streak);
+    updateTierUI();
+    buildCabinet();
+
+    // Buttons
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("This will erase all your progress. Continue?")) return;
+      localStorage.removeItem(LSKEY);
+      state = { points:0, streak:0, lastActive:null, lastAction:null, log:{} };
+      location.reload();
+    });
+
+    document.getElementById("undoBtn").addEventListener("click", undoLast);
+
+    // PWA install prompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e)=>{
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById("installBtn").style.display = "inline-block";
+    });
+    document.getElementById("installBtn").addEventListener("click", async ()=>{
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById("installBtn").style.display = "none";
+    });
+
+    // Register service worker (from your repo root)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+      });
+    }
+
+    // ------------------ Functions ------------------
+    function makeTopicCard(topic){
+      const completedTimes = (state.log?.[todayKey()]?.[topic.key] || 0);
+      const el = document.createElement("div");
+      el.className = "topic";
+
+      const info = document.createElement("div");
+      info.style.flex = "1";
+      info.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; justify-content:space-between;">
+          <div>
+            <h3>${topic.name}</h3>
+            <small class="muted">Completed today: <b id="cnt-${topic.key}">${completedTimes}</b></small>
+          </div>
+          <div class="em">${topic.emoji}</div>
+        </div>
+      `;
+
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.gap = "8px";
+
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.textContent = "✅ Mark Complete (+10)";
+      btn.addEventListener("click", () => completeTopic(topic.key));
+
+      const undoOne = document.createElement("button");
+      undoOne.className = "btn ghost";
+      undoOne.textContent = "↩️ Undo 1";
+      undoOne.addEventListener("click", () => undoOneTopic(topic.key));
+
+      actions.appendChild(btn);
+      actions.appendChild(undoOne);
+
+      el.appendChild(info);
+      el.appendChild(actions);
+      return el;
+    }
+
+    function completeTopic(key){
+      const day = todayKey();
+      state.log[day] = state.log[day] || {};
+      state.log[day][key] = (state.log[day][key] || 0) + 1;
+
+      state.points += 10;
+      state.lastAction = { type:"add", key, day };
+      showToast("+10 points! 🔥");
+      bumpStreakIfNewDay(true);
+      save();
+      refreshCounters(key);
+    }
+
+    function undoOneTopic(key){
+      const day = todayKey();
+      const cur = state.log?.[day]?.[key] || 0;
+      if (cur <= 0) return;
+      state.log[day][key] = cur - 1;
+      if (state.points >= 10) state.points -= 10;
+      state.lastAction = { type:"sub", key, day };
+      showToast("Undone ↩️");
+      save();
+      refreshCounters(key);
+    }
+
+    function undoLast(){
+      const a = state.lastAction;
+      if (!a) return;
+      if (a.type === "add"){
+        // reverse add
+        const cur = state.log?.[a.day]?.[a.key] || 0;
+        if (cur>0){ state.log[a.day][a.key] = cur - 1; }
+        if (state.points >= 10) state.points -= 10;
+      } else if (a.type === "sub"){
+        // reverse subtraction
+        state.log[a.day] = state.log[a.day] || {};
+        state.log[a.day][a.key] = (state.log[a.day][a.key] || 0) + 1;
+        state.points += 10;
+      }
+      state.lastAction = null;
+      showToast("Last action undone");
+      save();
+      refreshAllCounters();
+    }
+
+    function refreshCounters(key){
+      document.getElementById(`cnt-${key}`).textContent = state.log?.[todayKey()]?.[key] || 0;
+      document.getElementById("points").textContent = fmt(state.points);
+      updateTierUI();
+    }
+
+    function refreshAllCounters(){
+      TOPICS.forEach(t => refreshCounters(t.key));
+    }
+
+    function bumpStreakIfNewDay(addActivity=false){
+      const today = todayKey();
+      if (addActivity) state.lastActive = today;
+
+      if (!state.lastActive){
+        state.lastActive = today;
+        state.streak = 1;
+        save();
+        return;
+      }
+
+      if (state.lastActive === today) return; // already counted today
+
+      // Check gap
+      const prev = new Date(state.lastActive);
+      const cur = new Date(today);
+      const diff = (cur - prev)/(1000*60*60*24);
+
+      if (diff === 1) state.streak += 1;
+      else if (diff > 1) state.streak = 1; // reset streak if a day was missed
+
+      state.lastActive = today;
+      save();
+      document.getElementById("streak").textContent = fmt(state.streak);
+    }
+
+    function currentTier(){
+      let tier = BADGES[0];
+      for (const b of BADGES){
+        if (state.points >= b.need) tier = b;
+      }
+      return tier;
+    }
+
+    function nextTier(){
+      for (const b of BADGES){
+        if (state.points < b.need) return b;
+      }
+      return null; // at top
+    }
+
+    function updateTierUI(){
+      const cur = currentTier();
+      const nxt = nextTier();
+      const rankName = cur.tier;
+      document.getElementById("rankName").textContent = rankName;
+      document.getElementById("rankPill").title = cur.desc;
+
+      const tierView = document.getElementById("tierView");
+      tierView.className = "badge-tier " + (cur.class || "tier-bronze");
+      tierView.textContent = (cur.icon || "🏅") + " " + cur.tier;
+
+      const pb = document.getElementById("progressBar");
+      const desc = document.getElementById("tierDesc");
+      const toNext = document.getElementById("toNext");
+      if (nxt){
+        const span = Math.max(1, nxt.need - (BADGES.find(b=>b.need < nxt.need)?.need || 0));
+        const start = BADGES.find(b=>b.need < nxt.need)?.need || 0;
+        const haveInSpan = Math.max(0, state.points - start);
+        const pct = Math.max(0, Math.min(100, (haveInSpan/span)*100));
+        pb.style.width = pct.toFixed(1) + "%";
+        desc.textContent = `Earn ${nxt.need} pts for ${nxt.tier}`;
+        toNext.textContent = `${Math.max(0, nxt.need - state.points)} pts`;
+      } else {
+        pb.style.width = "100%";
+        desc.textContent = "Max badge reached — Master!";
+        toNext.textContent = "0";
+      }
+
+      document.getElementById("points").textContent = fmt(state.points);
+      document.getElementById("streak").textContent = fmt(state.streak);
+    }
+
+    function buildCabinet(){
+      const cab = document.getElementById("cabinet");
+      cab.innerHTML = "";
+      BADGES.forEach(b=>{
+        const got = state.points >= b.need;
+        const row = document.createElement("div");
+        row.className = "row";
+        const left = document.createElement("div");
+        left.style.display = "flex";
+        left.style.alignItems = "center";
+        left.style.gap = "10px";
+        const preview = document.createElement("div");
+        preview.className = "badge-tier " + b.class;
+        preview.textContent = `${b.icon} ${b.tier}`;
+        const text = document.createElement("div");
+        text.innerHTML = `<div style="font-weight:800">${b.tier}</div><div class="tiny">${b.desc}</div>`;
+        left.appendChild(preview);
+        left.appendChild(text);
+
+        const right = document.createElement("div");
+        right.className = "tiny";
+        right.textContent = got ? "Unlocked ✅" : `Need ${b.need - state.points} pts`;
+
+        row.appendChild(left);
+        row.appendChild(right);
+        cab.appendChild(row);
+      });
+    }
+
+    function showToast(msg){
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(()=> t.classList.remove("show"), 1200);
+    }
+
+    function save(){ localStorage.setItem(LSKEY, JSON.stringify(state)); }
+    function load(){ try { return JSON.parse(localStorage.getItem(LSKEY)); } catch(e){ return null; } }
+  </script>
 </body>
 </html>

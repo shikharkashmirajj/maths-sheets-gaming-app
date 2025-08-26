@@ -7,7 +7,7 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0f172a" />
   <style>
-    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding-bottom:60px; text-align:center; }
+    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding-bottom:70px; text-align:center; }
     h1 { background:#0f172a; color:white; padding:15px; margin:0; }
     .topic { background:white; margin:10px; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
     .btn { padding:8px 14px; border:none; border-radius:8px; background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
@@ -18,8 +18,16 @@
     .extra-actions { margin:15px; }
     .extra-btn { margin:5px; padding:10px 16px; border:none; border-radius:10px; background:#2196F3; color:white; font-weight:bold; cursor:pointer; }
     /* Bottom navigation */
-    .bottom-nav { position:fixed; bottom:0; left:0; width:100%; background:#1e293b; display:flex; justify-content:space-around; padding:10px 0; }
-    .bottom-nav button { background:none; border:none; color:white; font-size:1.2em; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+    .bottom-nav {
+      position:fixed; bottom:0; left:0; width:100%;
+      background:#1e293b; display:flex; justify-content:space-around;
+      padding:8px 0; box-shadow:0 -2px 6px rgba(0,0,0,0.3);
+    }
+    .bottom-nav button {
+      background:none; border:none; color:white;
+      font-size:1.2em; flex:1;
+      display:flex; flex-direction:column; align-items:center; cursor:pointer;
+    }
     .hidden { display:none; }
     .ladder { text-align:left; margin:20px; }
     .ladder div { margin:10px 0; font-size:1.1em; }
@@ -66,8 +74,8 @@
 
   <!-- Bottom Navigation -->
   <div class="bottom-nav">
-    <button onclick="showPage('dashboard')">🏠<span style="font-size:0.8em;">Dashboard</span></button>
-    <button onclick="showPage('rankPage')">🏆<span style="font-size:0.8em;">Rank</span></button>
+    <button onclick="showPage('dashboard')">🏠<span style="font-size:0.75em;">Dashboard</span></button>
+    <button onclick="showPage('rankPage')">🏆<span style="font-size:0.75em;">Rank</span></button>
   </div>
 
   <script>
@@ -86,7 +94,6 @@
       updateProgress();
     }
 
-    // Ranks
     function updateRank(points) {
       let rank = "Apprentice 🥉";
       if (points > 30000) rank = "CGL Maths Master 🏆";
@@ -95,7 +102,6 @@
       document.getElementById("rankText").innerText = rank;
     }
 
-    // Streak update
     const today = new Date().toDateString();
     if (today !== lastDate) {
       streak++;
@@ -108,7 +114,6 @@
     document.getElementById("streak").innerText = streak;
     updateRank(points);
 
-    // Progress bar
     function updateProgress() {
       const TOPICS = ["average","algebra","coordinate","geometry","hcf","height","mens","mixture","numbers","percent","pnl","sici","stats","surds","trig","tsd","twp"];
       const done = Object.keys(completed).length;
@@ -120,7 +125,6 @@
     }
     updateProgress();
 
-    // Topics list
     const TOPICS = [
       { key:"average", name:"⚖️ Average" },
       { key:"algebra", name:"➕ Algebra" },
@@ -163,7 +167,6 @@
       });
     });
 
-    // Extra buttons
     function addMockTest() {
       points += 500;
       saveProgress();
@@ -175,7 +178,6 @@
       alert("📖 You earned +200 XP for revising your notes!");
     }
 
-    // Page switching
     function showPage(pageId) {
       document.getElementById("dashboard").classList.add("hidden");
       document.getElementById("rankPage").classList.add("hidden");

@@ -7,143 +7,180 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0f172a" />
   <style>
-    body { font-family: Arial, sans-serif; background:#f9fafb; margin:0; padding:20px; text-align:center; }
-    h1 { color:#0f172a; }
-    .topic { background:#fff; margin:10px; padding:15px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.15); display:flex; justify-content:space-between; align-items:center; }
-    .topic button { background:#4f46e5; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
-    .topic button:disabled { background:#9ca3af; cursor:not-allowed; }
-    #scoreboard { background:#fff; margin:20px auto; padding:15px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.15); max-width:400px; }
-    #scoreboard button { margin:5px; background:#22c55e; color:#fff; padding:8px 12px; border:none; border-radius:8px; cursor:pointer; }
-    .progress-bar { background:#e5e7eb; border-radius:10px; height:20px; margin:10px 0; }
-    .progress-fill { height:100%; background:#4f46e5; border-radius:10px; }
+    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding-bottom:60px; text-align:center; }
+    h1 { background:#0f172a; color:white; padding:15px; margin:0; }
+    .topic { background:white; margin:10px; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
+    .btn { padding:8px 14px; border:none; border-radius:8px; background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
+    .btn:disabled { background:gray; cursor:default; }
+    .card { background:white; margin:20px auto; padding:20px; width:85%; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
+    .progress-container { margin:15px auto; width:80%; background:#ddd; border-radius:10px; height:20px; }
+    .progress-bar { height:100%; width:0%; background:#4CAF50; border-radius:10px; text-align:center; color:white; font-size:12px; line-height:20px; }
+    .extra-actions { margin:15px; }
+    .extra-btn { margin:5px; padding:10px 16px; border:none; border-radius:10px; background:#2196F3; color:white; font-weight:bold; cursor:pointer; }
+    /* Bottom navigation */
+    .bottom-nav { position:fixed; bottom:0; left:0; width:100%; background:#1e293b; display:flex; justify-content:space-around; padding:10px 0; }
+    .bottom-nav button { background:none; border:none; color:white; font-size:1.2em; display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+    .hidden { display:none; }
+    .ladder { text-align:left; margin:20px; }
+    .ladder div { margin:10px 0; font-size:1.1em; }
   </style>
 </head>
 <body>
-  <h1>🎮 Maths Sheets Gaming App</h1>
-  <div id="scoreboard"></div>
-  <h2>📘 Topics</h2>
-  <div id="topics"></div>
+  <h1>📘 Maths Sheets Gaming App</h1>
 
-<script>
-const TOPICS = [
-  { key:"average",   name:"⚖️ Average" },
-  { key:"algebra",   name:"➕ Algebra" },
-  { key:"coordinate",name:"📐 Coordinate Geometry" },
-  { key:"geometry",  name:"📏 Geometry" },
-  { key:"hcf",       name:"➗ HCF" },
-  { key:"height",    name:"⛰️ Height & Distance" },
-  { key:"mens",      name:"📦 Mensuration" },
-  { key:"mixture",   name:"🧪 Mixture" },
-  { key:"numbers",   name:"🔢 Number System" },
-  { key:"percent",   name:"📊 Percentage" },
-  { key:"pnl",       name:"💰 Profit & Loss" },
-  { key:"sici",      name:"💵 SI & CI" },
-  { key:"stats",     name:"📈 Statistics" },
-  { key:"surds",     name:"√ Surds" },
-  { key:"trig",      name:"📐 Trigonometry" },
-  { key:"tsd",       name:"🚗 Time, Speed & Distance" },
-  { key:"twp",       name:"⏳ Time & Work" }
-];
+  <!-- Dashboard Page -->
+  <div id="dashboard">
+    <div id="scoreboard" class="card">
+      <div>⭐ Points: <span id="points">0</span></div>
+      <div>🔥 Streak: <span id="streak">0</span> days</div>
+      <div class="progress-container">
+        <div class="progress-bar" id="progressBar">0%</div>
+      </div>
+    </div>
 
-// Rank system with milestones
-function getRank(points) {
-  if (points >= 30001) return { title: "👑 CGL Maths Master", next: "Maxed Out" };
-  if (points >= 15001) return { title: "🥷 Shortcut Ninja", next: "30,001 XP → 👑 CGL Maths Master" };
-  if (points >= 5001)  return { title: "⚡ Speed Solver", next: "15,001 XP → 🥷 Shortcut Ninja" };
-  return { title: "🪄 Apprentice", next: "5,001 XP → ⚡ Speed Solver" };
-}
+    <div class="extra-actions">
+      <button class="extra-btn" onclick="addMockTest()">📑 Completed Mock Test (+500 XP)</button>
+      <button class="extra-btn" onclick="addRevision()">📖 Revised Notes (+200 XP)</button>
+    </div>
 
-// Add bonus XP
-function addBonusXP(amount) {
-  let points = parseInt(localStorage.getItem("points") || "0");
-  points += amount;
-  localStorage.setItem("points", points);
-  renderDashboard();
-}
+    <div id="topics"></div>
+  </div>
 
-// Render topics
-function renderTopics() {
-  const container = document.getElementById("topics");
-  container.innerHTML = "";
-  let completed = JSON.parse(localStorage.getItem("completed") || "{}");
+  <!-- Rank Page -->
+  <div id="rankPage" class="hidden">
+    <div class="card">
+      <h2>Your Current Rank</h2>
+      <p id="rankText">Loading...</p>
+      <p>⭐ Total Points: <span id="pointsRank">0</span></p>
+    </div>
+    <div class="card">
+      <h2>Rank Ladder</h2>
+      <div class="ladder">
+        <div>🥉 0–5,000 XP → Apprentice</div>
+        <div>⚡ 5,001–15,000 XP → Speed Solver</div>
+        <div>🥷 15,001–30,000 XP → Shortcut Ninja</div>
+        <div>🏆 30,001+ XP → CGL Maths Master</div>
+      </div>
+    </div>
+  </div>
 
-  TOPICS.forEach(t => {
-    const div = document.createElement("div");
-    div.className = "topic";
-    div.innerHTML = `
-      <span>${t.name}</span>
-      <button ${completed[t.key] ? "disabled" : ""} onclick="completeTopic('${t.key}')">
-        ${completed[t.key] ? "✅ Done" : "Mark Complete"}
-      </button>
-    `;
-    container.appendChild(div);
-  });
-}
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <button onclick="showPage('dashboard')">🏠<span style="font-size:0.8em;">Dashboard</span></button>
+    <button onclick="showPage('rankPage')">🏆<span style="font-size:0.8em;">Rank</span></button>
+  </div>
 
-// Mark topic complete
-function completeTopic(key) {
-  let completed = JSON.parse(localStorage.getItem("completed") || "{}");
-  let points = parseInt(localStorage.getItem("points") || "0");
-  let today = new Date().toDateString();
-  let last = localStorage.getItem("lastDay");
-  let streak = parseInt(localStorage.getItem("streak") || "0");
+  <script>
+    // Data storage
+    let points = parseInt(localStorage.getItem("points")) || 0;
+    let streak = parseInt(localStorage.getItem("streak")) || 0;
+    let lastDate = localStorage.getItem("lastDate") || "";
+    let completed = JSON.parse(localStorage.getItem("completed")) || {};
 
-  if (!completed[key]) {
-    completed[key] = true;
-    localStorage.setItem("completed", JSON.stringify(completed));
-
-    points += 10; // +10 XP per topic
-
-    // Streak handling with penalty
-    if (last !== today) {
-      if (last && new Date(today) - new Date(last) > 86400000) {
-        streak = 0;
-        points = Math.max(0, points - 200); // deduct 200 XP
-      } else {
-        streak += 1;
-      }
-      localStorage.setItem("streak", streak);
-      localStorage.setItem("lastDay", today);
+    function saveProgress() {
+      localStorage.setItem("points", points);
+      localStorage.setItem("completed", JSON.stringify(completed));
+      document.getElementById("points").innerText = points;
+      document.getElementById("pointsRank").innerText = points;
+      updateRank(points);
+      updateProgress();
     }
 
-    localStorage.setItem("points", points);
-    renderDashboard();
-    renderTopics();
-  }
-}
+    // Ranks
+    function updateRank(points) {
+      let rank = "Apprentice 🥉";
+      if (points > 30000) rank = "CGL Maths Master 🏆";
+      else if (points > 15000) rank = "Shortcut Ninja 🥷";
+      else if (points > 5000) rank = "Speed Solver ⚡";
+      document.getElementById("rankText").innerText = rank;
+    }
 
-// Dashboard with progress bar
-function renderDashboard() {
-  const points = parseInt(localStorage.getItem("points") || "0");
-  const rankInfo = getRank(points);
-  const streak = localStorage.getItem("streak") || 0;
+    // Streak update
+    const today = new Date().toDateString();
+    if (today !== lastDate) {
+      streak++;
+      localStorage.setItem("lastDate", today);
+      localStorage.setItem("streak", streak);
+    }
 
-  // Progress bar calculation
-  let progress = 100;
-  if (rankInfo.title === "🪄 Apprentice") {
-    progress = Math.min(100, (points/5000)*100);
-  } else if (rankInfo.title === "⚡ Speed Solver") {
-    progress = Math.min(100, ((points-5000)/(15000-5000))*100);
-  } else if (rankInfo.title === "🥷 Shortcut Ninja") {
-    progress = Math.min(100, ((points-15000)/(30000-15000))*100);
-  }
+    document.getElementById("points").innerText = points;
+    document.getElementById("pointsRank").innerText = points;
+    document.getElementById("streak").innerText = streak;
+    updateRank(points);
 
-  document.getElementById("scoreboard").innerHTML = `
-    <h2>⭐ Your Progress</h2>
-    <p>Points: <b>${points}</b></p>
-    <p>Rank: <b>${rankInfo.title}</b></p>
-    <p>Next Rank: <b>${rankInfo.next}</b></p>
-    <div class="progress-bar">
-      <div class="progress-fill" style="width:${progress}%"></div>
-    </div>
-    <p>Streak: <b>${streak} days</b></p>
-    <button onclick="addBonusXP(200)">🎯 Sectional Mock Test (+200 XP)</button>
-    <button onclick="addBonusXP(100)">📘 Revision of Maths Notes (+100 XP)</button>
-  `;
-}
+    // Progress bar
+    function updateProgress() {
+      const TOPICS = ["average","algebra","coordinate","geometry","hcf","height","mens","mixture","numbers","percent","pnl","sici","stats","surds","trig","tsd","twp"];
+      const done = Object.keys(completed).length;
+      const total = TOPICS.length;
+      const percent = Math.round((done / total) * 100);
+      const bar = document.getElementById("progressBar");
+      bar.style.width = percent + "%";
+      bar.innerText = percent + "%";
+    }
+    updateProgress();
 
-renderDashboard();
-renderTopics();
-</script>
+    // Topics list
+    const TOPICS = [
+      { key:"average", name:"⚖️ Average" },
+      { key:"algebra", name:"➕ Algebra" },
+      { key:"coordinate", name:"📐 Coordinate Geometry" },
+      { key:"geometry", name:"📏 Geometry" },
+      { key:"hcf", name:"➗ HCF" },
+      { key:"height", name:"⛰️ Height & Distance" },
+      { key:"mens", name:"📦 Mensuration" },
+      { key:"mixture", name:"🧪 Mixture" },
+      { key:"numbers", name:"🔢 Number System" },
+      { key:"percent", name:"📊 Percentage" },
+      { key:"pnl", name:"💰 Profit & Loss" },
+      { key:"sici", name:"💵 SI & CI" },
+      { key:"stats", name:"📈 Statistics" },
+      { key:"surds", name:"√ Surds" },
+      { key:"trig", name:"📐 Trigonometry" },
+      { key:"tsd", name:"🚗 Time, Speed & Distance" },
+      { key:"twp", name:"⏳ Time & Work" }
+    ];
+
+    const container = document.getElementById("topics");
+    TOPICS.forEach(topic => {
+      const div = document.createElement("div");
+      div.className = "topic";
+      div.innerHTML = `<span>${topic.name}</span>
+        <button class="btn" id="btn-${topic.key}">Mark Done</button>`;
+      container.appendChild(div);
+
+      if (completed[topic.key]) {
+        div.querySelector("button").disabled = true;
+        div.querySelector("button").innerText = "✅ Done";
+      }
+
+      div.querySelector("button").addEventListener("click", () => {
+        points += 100;
+        completed[topic.key] = true;
+        saveProgress();
+        div.querySelector("button").disabled = true;
+        div.querySelector("button").innerText = "✅ Done";
+      });
+    });
+
+    // Extra buttons
+    function addMockTest() {
+      points += 500;
+      saveProgress();
+      alert("🎉 You earned +500 XP for completing a Mock Test!");
+    }
+    function addRevision() {
+      points += 200;
+      saveProgress();
+      alert("📖 You earned +200 XP for revising your notes!");
+    }
+
+    // Page switching
+    function showPage(pageId) {
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("rankPage").classList.add("hidden");
+      document.getElementById(pageId).classList.remove("hidden");
+    }
+  </script>
 </body>
 </html>

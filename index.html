@@ -1,199 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maths Sheets Gaming App</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Tracker App</title>
+  <meta name="theme-color" content="#0f172a"/>
   <style>
-    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding-bottom:80px; text-align:center; }
-    h1 { background:#0f172a; color:white; padding:15px; margin:0; }
-    .topic { background:white; margin:10px; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
-    .btn { padding:6px 12px; border:none; border-radius:8px; background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
-    .card { background:white; margin:20px auto; padding:20px; width:85%; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
-    .progress-container { margin:15px auto; width:80%; background:#ddd; border-radius:10px; height:20px; }
-    .progress-bar { height:100%; width:0%; background:#4CAF50; border-radius:10px; text-align:center; color:white; font-size:12px; line-height:20px; }
-    .extra-actions { margin:15px; }
-    .extra-btn { margin:5px; padding:10px 16px; border:none; border-radius:10px; background:#2196F3; color:white; font-weight:bold; cursor:pointer; }
-    .reset-btn { background:#e63946; }
-    /* Bottom navigation */
-    .bottom-nav {
-      position:fixed; bottom:0; left:0; width:100%;
-      background:#1e293b; display:flex; justify-content:space-around;
-      padding:10px 0; box-shadow:0 -2px 6px rgba(0,0,0,0.3);
-    }
-    .bottom-nav button {
-      background:none; border:none; color:white; cursor:pointer;
-      display:flex; flex-direction:column; align-items:center;
-    }
-    .bottom-nav button.active { color:#4CAF50; font-weight:bold; }
-    .page { display:none; padding-bottom:60px; }
+    :root { --bg:#f5f5f5; --ink:#0f172a; --card:#fff; --brand:#1e293b; --ok:#4CAF50; --warn:#e63946; }
+    body { font-family: Arial, sans-serif; background:var(--bg); margin:0; text-align:center; padding-bottom:80px; }
+    h1 { background:var(--ink); color:#fff; margin:0; padding:14px; font-size:20px;}
+    .page { display:none; padding:12px 10px 70px; }
     .page.active { display:block; }
-    .ladder { text-align:left; margin:20px; }
-    .ladder div { margin:10px 0; font-size:1.1em; }
+    .card { background:var(--card); margin:12px auto; padding:16px; width:min(720px,90%); border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:left; }
+    .row { display:flex; justify-content:space-between; align-items:center; margin:8px 0; }
+    .progress-container { margin:10px 0; background:#e5e7eb; height:22px; border-radius:11px; overflow:hidden; }
+    .progress-bar { height:100%; width:0%; background:var(--ok); color:#fff; font-size:12px; line-height:22px; text-align:center; white-space:nowrap; }
+    .btn { border:none; border-radius:8px; padding:6px 12px; font-weight:700; cursor:pointer; color:#fff; background:var(--ok); }
+    .btn.warn { background:var(--warn); }
+    .pill { font-size:12px; background:#eef2ff; color:#334155; padding:4px 8px; border-radius:999px; }
+    .big { font-size:18px; font-weight:700; }
+    .bottom-nav { position:fixed; bottom:0; left:0; width:100%; background:var(--brand); display:flex; justify-content:space-around; padding:10px 0; box-shadow:0 -2px 6px rgba(0,0,0,.25); }
+    .bottom-nav button { background:none; border:none; color:#fff; cursor:pointer; display:flex; flex-direction:column; align-items:center; }
+    .bottom-nav button.active { color:var(--ok); font-weight:700; }
   </style>
 </head>
 <body>
-  <h1>📘 Maths Sheets Gaming App</h1>
+  <h1>📚 Study Tracker</h1>
 
-  <!-- Dashboard Page -->
-  <div id="dashboard" class="page active">
-    <div id="scoreboard" class="card">
-      <div>⭐ Points: <span id="points">0</span></div>
+  <!-- PAGE 1: MATHS -->
+  <section id="maths" class="page active">
+    <div class="card">
+      <div>⭐ XP: <span class="big" id="points">0</span></div>
       <div>🔥 Streak: <span id="streak">0</span> days</div>
-      <div class="progress-container">
-        <div class="progress-bar" id="progressBar">0%</div>
-      </div>
+      <h3 style="margin:12px 0 6px;">🎯 Daily Maths Progress (500+ XP)</h3>
+      <div class="progress-container"><div id="mathsBar" class="progress-bar">0/500</div></div>
     </div>
 
-    <div class="extra-actions">
-      <button class="extra-btn" onclick="addMockTest()">📑 Completed Mock Test (+500 XP)</button>
-      <button class="extra-btn" onclick="addRevision()">📖 Revised Notes (+200 XP)</button>
-      <button class="extra-btn reset-btn" onclick="resetProgress()">🔄 Reset Progress</button>
-    </div>
-
-    <div id="topics"></div>
-  </div>
-
-  <!-- Rank Page -->
-  <div id="rankPage" class="page">
     <div class="card">
-      <h2>Your Current Rank</h2>
-      <p id="rankText">Loading...</p>
-      <p>⭐ Total Points: <span id="pointsRank">0</span></p>
+      <h3>📘 Maths Topics</h3>
+      <div id="topics"></div>
+      <hr/>
+      <div class="row"><span>📝 Mock Test</span><button class="btn" id="mockBtn" onclick="toggleExtra('mock',500)">Mark Done</button></div>
+      <div class="row"><span>📖 Revision Notes</span><button class="btn" id="notesBtn" onclick="toggleExtra('notes',200)">Mark Done</button></div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <button class="btn warn" onclick="resetProgress()">🔄 Reset All Progress</button>
+    </div>
+  </section>
+
+  <!-- PAGE 2: DAILY TASKS -->
+  <section id="daily" class="page">
+    <div class="card">
+      <h3>📅 Daily Study Tracker (500+ XP)</h3>
+      <div class="progress-container"><div id="dailyBar" class="progress-bar">0/500</div></div>
+      <div id="dailyTasks"></div>
+    </div>
+  </section>
+
+  <!-- PAGE 3: TROPHY -->
+  <section id="trophy" class="page">
+    <div class="card" style="text-align:center;">
+      <div class="big">🏆 <span id="rankText">Loading...</span></div>
+      <div>Total XP: <strong id="pointsRank">0</strong></div>
+      <div class="progress-container"><div id="rankBar" class="progress-bar">0%</div></div>
     </div>
     <div class="card">
-      <h2>Rank Ladder</h2>
-      <div class="ladder">
-        <div>🥉 0–5,000 XP → Apprentice</div>
-        <div>⚡ 5,001–15,000 XP → Speed Solver</div>
-        <div>🥷 15,001–30,000 XP → Shortcut Ninja</div>
-        <div>🏆 30,001+ XP → CGL Maths Master</div>
-      </div>
+      <h3>Rank Ladder</h3>
+      <p>🥉 0–10,000 XP → Apprentice</p>
+      <p>⚡ 10,001–25,000 XP → Speed Solver</p>
+      <p>🥷 25,001–50,000 XP → Shortcut Ninja</p>
+      <p>🏆 50,001+ XP → CGL Maths Master</p>
     </div>
-  </div>
+  </section>
 
-  <!-- Bottom Navigation -->
+  <!-- NAV -->
   <div class="bottom-nav">
-    <button id="btnDash" class="active" onclick="showPage('dashboard', this)">🏠<span style="font-size:0.75em;">Dashboard</span></button>
-    <button id="btnRank" onclick="showPage('rankPage', this)">🏆<span style="font-size:0.75em;">Rank</span></button>
+    <button onclick="showPage('maths', this)" class="active">📘<span style="font-size:.8em;">Maths</span></button>
+    <button onclick="showPage('daily', this)">📅<span style="font-size:.8em;">Daily</span></button>
+    <button onclick="showPage('trophy', this)">🏆<span style="font-size:.8em;">Trophy</span></button>
   </div>
 
   <script>
-    // Data storage
-    let points = parseInt(localStorage.getItem("points")) || 0;
-    let streak = parseInt(localStorage.getItem("streak")) || 0;
+    // -------------------
+    // STATE
+    // -------------------
+    let points = +localStorage.getItem("points") || 0;
+    let streak = +localStorage.getItem("streak") || 0;
     let lastDate = localStorage.getItem("lastDate") || "";
-    let completed = JSON.parse(localStorage.getItem("completed")) || {}; // topic progress
+    let mathsXP = +localStorage.getItem("mathsXP") || 0;
+    let topicProgress = JSON.parse(localStorage.getItem("topicProgress") || "{}");
+    let dailyTasks = JSON.parse(localStorage.getItem("dailyTasks") || {});
+    let extras = JSON.parse(localStorage.getItem("extras") || {});
 
-    const QUESTIONS_PER_TOPIC = 50; // target per topic for 100% bar
-
-    function saveProgress() {
-      localStorage.setItem("points", points);
-      localStorage.setItem("completed", JSON.stringify(completed));
-      document.getElementById("points").innerText = points;
-      document.getElementById("pointsRank").innerText = points;
-      updateRank(points);
-      updateProgress();
-    }
-
-    function updateRank(points) {
-      let rank = "Apprentice 🥉";
-      if (points > 30000) rank = "CGL Maths Master 🏆";
-      else if (points > 15000) rank = "Shortcut Ninja 🥷";
-      else if (points > 5000) rank = "Speed Solver ⚡";
-      document.getElementById("rankText").innerText = rank;
-    }
-
-    // Streak logic
     const today = new Date().toDateString();
-    if (today !== lastDate) {
+    if(today !== lastDate){
+      dailyTasks = {};
+      mathsXP = 0;
+      extras = {};
       streak++;
-      localStorage.setItem("lastDate", today);
       localStorage.setItem("streak", streak);
+      localStorage.setItem("lastDate", today);
     }
 
-    document.getElementById("points").innerText = points;
-    document.getElementById("pointsRank").innerText = points;
-    document.getElementById("streak").innerText = streak;
-    updateRank(points);
-
-    function updateProgress() {
-      let totalDone = 0;
-      let totalTarget = TOPICS.length * QUESTIONS_PER_TOPIC;
-      for (let key in completed) {
-        totalDone += completed[key];
-      }
-      const percent = Math.min(100, Math.round((totalDone / totalTarget) * 100));
-      const bar = document.getElementById("progressBar");
-      bar.style.width = percent + "%";
-      bar.innerText = percent + "%";
-    }
-
-    const TOPICS = [
-      { key:"average", name:"⚖️ Average" },
-      { key:"algebra", name:"➕ Algebra" },
-      { key:"coordinate", name:"📐 Coordinate Geometry" },
-      { key:"geometry", name:"📏 Geometry" },
-      { key:"hcf", name:"➗ HCF" },
-      { key:"height", name:"⛰️ Height & Distance" },
-      { key:"mens", name:"📦 Mensuration" },
-      { key:"mixture", name:"🧪 Mixture" },
-      { key:"numbers", name:"🔢 Number System" },
-      { key:"percent", name:"📊 Percentage" },
-      { key:"pnl", name:"💰 Profit & Loss" },
-      { key:"sici", name:"💵 SI & CI" },
-      { key:"stats", name:"📈 Statistics" },
-      { key:"surds", name:"√ Surds" },
-      { key:"trig", name:"📐 Trigonometry" },
-      { key:"tsd", name:"🚗 Time, Speed & Distance" },
-      { key:"twp", name:"⏳ Time & Work" }
-    ];
-
-    const container = document.getElementById("topics");
-    TOPICS.forEach(topic => {
-      if (!completed[topic.key]) completed[topic.key] = 0;
-      const div = document.createElement("div");
-      div.className = "topic";
-      div.innerHTML = `<span>${topic.name}</span>
-        <button class="btn" id="btn-${topic.key}">+1 Q (${completed[topic.key]})</button>`;
-      container.appendChild(div);
-
-      div.querySelector("button").addEventListener("click", () => {
-        points += 10;
-        completed[topic.key] += 1;
-        saveProgress();
-        div.querySelector("button").innerText = `+1 Q (${completed[topic.key]})`;
-      });
+    // -------------------
+    // MATHS TOPICS
+    // -------------------
+    const TOPICS = ["Average","Algebra","Co-ordinate","Geometry","HCF","Height and Distance","Mensuration","Mixture","Number System","Percentage","Profit and Loss","SI and CI","Statistics","Surds","Trigonometry","TSD","TWP"];
+    const topicsDiv = document.getElementById("topics");
+    TOPICS.forEach(t=>{
+      const row = document.createElement("div");
+      row.className="row";
+      const count = topicProgress[t]||0;
+      row.innerHTML = `<span>${t}</span>
+      <span>
+        <button class="btn" id="btn-${t}">+Q</button>
+        <span class="pill" id="count-${t}">${count}</span>
+      </span>`;
+      topicsDiv.appendChild(row);
+      document.getElementById("btn-"+t).onclick=()=>toggleQuestion(t);
     });
 
-    function addMockTest() {
-      points += 500;
-      saveProgress();
-      alert("🎉 You earned +500 XP for completing a Mock Test!");
-    }
-    function addRevision() {
-      points += 200;
-      saveProgress();
-      alert("📖 You earned +200 XP for revising your notes!");
-    }
-    function resetProgress() {
-      if (confirm("⚠️ Are you sure you want to reset all progress?")) {
-        localStorage.clear();
-        location.reload();
+    function toggleQuestion(topic){
+      if(!topicProgress[topic]) topicProgress[topic]=0;
+      if(topicProgress[topic]>0){
+        topicProgress[topic]--;
+        points-=10; mathsXP-=10;
+      } else {
+        topicProgress[topic]++;
+        points+=10; mathsXP+=10;
       }
+      save();
+      document.getElementById("count-"+topic).innerText=topicProgress[topic];
     }
 
-    // Page switching
-    function showPage(pageId, btn) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(pageId).classList.add('active');
-      document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+    // -------------------
+    // EXTRA (Mock, Notes)
+    // -------------------
+    function toggleExtra(key,xp){
+      if(extras[key]){
+        delete extras[key];
+        points-=xp; mathsXP-=xp;
+        document.getElementById(key+"Btn").innerText="Mark Done";
+      } else {
+        extras[key]=true;
+        points+=xp; mathsXP+=xp;
+        document.getElementById(key+"Btn").innerText="✅ Done";
+      }
+      save();
+    }
+
+    // -------------------
+    // DAILY TASKS
+    // -------------------
+    const DAILY = [
+      {key:"calc",label:"🧮 Calculation Practice",xp:50},
+      {key:"gkVideo",label:"📰 GK Video",xp:150},
+      {key:"gkPdf",label:"📄 GK PDF Revise",xp:50},
+      {key:"engVideo",label:"🎧 English Video",xp:150},
+      {key:"engPdf",label:"📘 English PDF Revise",xp:50},
+      {key:"reasoning",label:"🧠 Reasoning Set",xp:50}
+    ];
+
+    const dailyDiv = document.getElementById("dailyTasks");
+    DAILY.forEach(t=>{
+      const row=document.createElement("div");
+      row.className="row";
+      const done = dailyTasks[t.key];
+      row.innerHTML=`<span>${t.label} <span class="pill">+${t.xp} XP</span></span>
+        <button id="btn-${t.key}" class="btn">${done?"✅ Done":"Mark Done"}</button>`;
+      dailyDiv.appendChild(row);
+      document.getElementById("btn-"+t.key).onclick=()=>toggleDaily(t.key,t.xp);
+    });
+
+    function toggleDaily(key,xp){
+      if(dailyTasks[key]){
+        delete dailyTasks[key];
+        points-=xp;
+        document.getElementById("btn-"+key).innerText="Mark Done";
+      } else {
+        dailyTasks[key]=true;
+        points+=xp;
+        document.getElementById("btn-"+key).innerText="✅ Done";
+      }
+      save();
+    }
+
+    // -------------------
+    // GENERAL
+    // -------------------
+    function resetProgress(){ if(confirm("Reset all progress?")){localStorage.clear();location.reload();} }
+
+    function updateRank(){
+      let rank="Apprentice 🥉", next=10000, min=0;
+      if(points>50000){rank="CGL Maths Master 🏆"; next=points; min=50001;}
+      else if(points>25000){rank="Shortcut Ninja 🥷"; next=50000; min=25001;}
+      else if(points>10000){rank="Speed Solver ⚡"; next=25000; min=10001;}
+      const pct=Math.min(100,Math.round((points-min)/(next-min)*100));
+      document.getElementById("rankText").innerText=rank;
+      document.getElementById("rankBar").style.width=pct+"%";
+      document.getElementById("rankBar").innerText=pct+"%";
+    }
+
+    function save(){
+      localStorage.setItem("points", points);
+      localStorage.setItem("streak", streak);
+      localStorage.setItem("mathsXP", mathsXP);
+      localStorage.setItem("topicProgress", JSON.stringify(topicProgress));
+      localStorage.setItem("dailyTasks", JSON.stringify(dailyTasks));
+      localStorage.setItem("extras", JSON.stringify(extras));
+
+      document.getElementById("points").innerText=points;
+      document.getElementById("pointsRank").innerText=points;
+      document.getElementById("streak").innerText=streak;
+
+      document.getElementById("mathsBar").style.width=Math.round(mathsXP/500*100)+"%";
+      document.getElementById("mathsBar").innerText=mathsXP+"/500";
+
+      let dailyXP=DAILY.filter(t=>dailyTasks[t.key]).reduce((s,t)=>s+t.xp,0);
+      document.getElementById("dailyBar").style.width=Math.round(dailyXP/500*100)+"%";
+      document.getElementById("dailyBar").innerText=dailyXP+"/500";
+
+      updateRank();
+    }
+
+    function showPage(id,btn){
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
     }
 
-    updateProgress();
+    save();
   </script>
 </body>
 </html>

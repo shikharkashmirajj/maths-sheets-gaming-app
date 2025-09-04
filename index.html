@@ -7,28 +7,29 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0f172a" />
   <style>
-    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding-bottom:70px; text-align:center; }
+    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding-bottom:80px; text-align:center; }
     h1 { background:#0f172a; color:white; padding:15px; margin:0; }
     .topic { background:white; margin:10px; padding:15px; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center; }
-    .btn { padding:8px 14px; border:none; border-radius:8px; background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
-    .btn:disabled { background:gray; cursor:default; }
+    .btn { padding:6px 12px; border:none; border-radius:8px; background:#4CAF50; color:white; font-weight:bold; cursor:pointer; }
     .card { background:white; margin:20px auto; padding:20px; width:85%; border-radius:12px; box-shadow:0 2px 5px rgba(0,0,0,0.1); }
     .progress-container { margin:15px auto; width:80%; background:#ddd; border-radius:10px; height:20px; }
     .progress-bar { height:100%; width:0%; background:#4CAF50; border-radius:10px; text-align:center; color:white; font-size:12px; line-height:20px; }
     .extra-actions { margin:15px; }
     .extra-btn { margin:5px; padding:10px 16px; border:none; border-radius:10px; background:#2196F3; color:white; font-weight:bold; cursor:pointer; }
+    .reset-btn { background:#e63946; }
     /* Bottom navigation */
     .bottom-nav {
       position:fixed; bottom:0; left:0; width:100%;
       background:#1e293b; display:flex; justify-content:space-around;
-      padding:8px 0; box-shadow:0 -2px 6px rgba(0,0,0,0.3);
+      padding:10px 0; box-shadow:0 -2px 6px rgba(0,0,0,0.3);
     }
     .bottom-nav button {
-      background:none; border:none; color:white;
-      font-size:1.2em; flex:1;
-      display:flex; flex-direction:column; align-items:center; cursor:pointer;
+      background:none; border:none; color:white; cursor:pointer;
+      display:flex; flex-direction:column; align-items:center;
     }
-    .hidden { display:none; }
+    .bottom-nav button.active { color:#4CAF50; font-weight:bold; }
+    .page { display:none; padding-bottom:60px; }
+    .page.active { display:block; }
     .ladder { text-align:left; margin:20px; }
     .ladder div { margin:10px 0; font-size:1.1em; }
   </style>
@@ -37,25 +38,30 @@
   <h1>📘 Maths Sheets Gaming App</h1>
 
   <!-- Dashboard Page -->
-  <div id="dashboard">
+  <div id="dashboard" class="page active">
     <div id="scoreboard" class="card">
       <div>⭐ Points: <span id="points">0</span></div>
       <div>🔥 Streak: <span id="streak">0</span> days</div>
       <div class="progress-container">
         <div class="progress-bar" id="progressBar">0%</div>
       </div>
+      <h3>🎯 Daily Goal: 50 Questions</h3>
+      <div class="progress-container">
+        <div class="progress-bar" id="dailyBar">0%</div>
+      </div>
     </div>
 
     <div class="extra-actions">
       <button class="extra-btn" onclick="addMockTest()">📑 Completed Mock Test (+500 XP)</button>
       <button class="extra-btn" onclick="addRevision()">📖 Revised Notes (+200 XP)</button>
+      <button class="extra-btn reset-btn" onclick="resetProgress()">🔄 Reset Progress</button>
     </div>
 
     <div id="topics"></div>
   </div>
 
   <!-- Rank Page -->
-  <div id="rankPage" class="hidden">
+  <div id="rankPage" class="page">
     <div class="card">
       <h2>Your Current Rank</h2>
       <p id="rankText">Loading...</p>
@@ -74,8 +80,8 @@
 
   <!-- Bottom Navigation -->
   <div class="bottom-nav">
-    <button onclick="showPage('dashboard')">🏠<span style="font-size:0.75em;">Dashboard</span></button>
-    <button onclick="showPage('rankPage')">🏆<span style="font-size:0.75em;">Rank</span></button>
+    <button id="btnDash" class="active" onclick="showPage('dashboard', this)">🏠<span style="font-size:0.75em;">Dashboard</span></button>
+    <button id="btnRank" onclick="showPage('rankPage', this)">🏆<span style="font-size:0.75em;">Rank</span></button>
   </div>
 
   <script>
@@ -83,15 +89,32 @@
     let points = parseInt(localStorage.getItem("points")) || 0;
     let streak = parseInt(localStorage.getItem("streak")) || 0;
     let lastDate = localStorage.getItem("lastDate") || "";
-    let completed = JSON.parse(localStorage.getItem("completed")) || {};
+    let completed = JSON.parse(localStorage.getItem("completed")) || {}; 
+    let dailyCount = parseInt(localStorage.getItem("dailyCount")) || 0;
+    let dailyDate = localStorage.getItem("dailyDate") || "";
+
+    const QUESTIONS_PER_TOPIC = 50; // overall target per topic
+    const DAILY_TARGET = 50;
+
+    // Reset daily at new day
+    const today = new Date().toDateString();
+    if (today !== dailyDate) {
+      dailyCount = 0;
+      dailyDate = today;
+      localStorage.setItem("dailyDate", today);
+      localStorage.setItem("dailyCount", dailyCount);
+    }
 
     function saveProgress() {
       localStorage.setItem("points", points);
       localStorage.setItem("completed", JSON.stringify(completed));
+      localStorage.setItem("dailyCount", dailyCount);
+      localStorage.setItem("dailyDate", dailyDate);
       document.getElementById("points").innerText = points;
       document.getElementById("pointsRank").innerText = points;
       updateRank(points);
       updateProgress();
+      updateDaily();
     }
 
     function updateRank(points) {
@@ -102,7 +125,7 @@
       document.getElementById("rankText").innerText = rank;
     }
 
-    const today = new Date().toDateString();
+    // Streak logic
     if (today !== lastDate) {
       streak++;
       localStorage.setItem("lastDate", today);
@@ -115,15 +138,23 @@
     updateRank(points);
 
     function updateProgress() {
-      const TOPICS = ["average","algebra","coordinate","geometry","hcf","height","mens","mixture","numbers","percent","pnl","sici","stats","surds","trig","tsd","twp"];
-      const done = Object.keys(completed).length;
-      const total = TOPICS.length;
-      const percent = Math.round((done / total) * 100);
+      let totalDone = 0;
+      let totalTarget = TOPICS.length * QUESTIONS_PER_TOPIC;
+      for (let key in completed) {
+        totalDone += completed[key];
+      }
+      const percent = Math.min(100, Math.round((totalDone / totalTarget) * 100));
       const bar = document.getElementById("progressBar");
       bar.style.width = percent + "%";
       bar.innerText = percent + "%";
     }
-    updateProgress();
+
+    function updateDaily() {
+      const percent = Math.min(100, Math.round((dailyCount / DAILY_TARGET) * 100));
+      const bar = document.getElementById("dailyBar");
+      bar.style.width = percent + "%";
+      bar.innerText = dailyCount + "/" + DAILY_TARGET;
+    }
 
     const TOPICS = [
       { key:"average", name:"⚖️ Average" },
@@ -147,42 +178,51 @@
 
     const container = document.getElementById("topics");
     TOPICS.forEach(topic => {
+      if (!completed[topic.key]) completed[topic.key] = 0;
       const div = document.createElement("div");
       div.className = "topic";
       div.innerHTML = `<span>${topic.name}</span>
-        <button class="btn" id="btn-${topic.key}">Mark Done</button>`;
+        <button class="btn" id="btn-${topic.key}">+1 Q (${completed[topic.key]})</button>`;
       container.appendChild(div);
 
-      if (completed[topic.key]) {
-        div.querySelector("button").disabled = true;
-        div.querySelector("button").innerText = "✅ Done";
-      }
-
       div.querySelector("button").addEventListener("click", () => {
-        points += 100;
-        completed[topic.key] = true;
+        points += 10;
+        completed[topic.key] += 1;
+        dailyCount += 1;
         saveProgress();
-        div.querySelector("button").disabled = true;
-        div.querySelector("button").innerText = "✅ Done";
+        div.querySelector("button").innerText = `+1 Q (${completed[topic.key]})`;
       });
     });
 
     function addMockTest() {
       points += 500;
+      dailyCount += 50; // treat as 50 questions
       saveProgress();
       alert("🎉 You earned +500 XP for completing a Mock Test!");
     }
     function addRevision() {
       points += 200;
+      dailyCount += 20; // treat as 20 questions
       saveProgress();
       alert("📖 You earned +200 XP for revising your notes!");
     }
-
-    function showPage(pageId) {
-      document.getElementById("dashboard").classList.add("hidden");
-      document.getElementById("rankPage").classList.add("hidden");
-      document.getElementById(pageId).classList.remove("hidden");
+    function resetProgress() {
+      if (confirm("⚠️ Are you sure you want to reset all progress?")) {
+        localStorage.clear();
+        location.reload();
+      }
     }
+
+    // Page switching
+    function showPage(pageId, btn) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    updateProgress();
+    updateDaily();
   </script>
 </body>
 </html>

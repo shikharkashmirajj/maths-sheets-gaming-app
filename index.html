@@ -13,11 +13,10 @@
     .page.active { display:block; }
     .card { background:var(--card); margin:12px auto; padding:16px; width:min(720px,90%); border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:left; }
     .row { display:flex; justify-content:space-between; align-items:center; margin:8px 0; }
-    .progress-container { margin:10px 0; background:#e5e7eb; height:20px; border-radius:10px; overflow:hidden; }
-    .progress-bar { height:100%; width:0%; background:var(--ok); color:#fff; font-size:12px; line-height:20px; text-align:center; }
+    .progress-container { margin:10px 0; background:#e5e7eb; height:22px; border-radius:11px; overflow:hidden; }
+    .progress-bar { height:100%; width:0%; background:var(--ok); color:#fff; font-size:12px; line-height:22px; text-align:center; white-space:nowrap; }
     .btn { border:none; border-radius:8px; padding:6px 12px; font-weight:700; cursor:pointer; color:#fff; background:var(--ok); }
     .btn.warn { background:var(--warn); }
-    .btn:disabled { opacity:.65; cursor:default; }
     .pill { font-size:12px; background:#eef2ff; color:#334155; padding:4px 8px; border-radius:999px; }
     .big { font-size:18px; font-weight:700; }
     .bottom-nav { position:fixed; bottom:0; left:0; width:100%; background:var(--brand); display:flex; justify-content:space-around; padding:10px 0; box-shadow:0 -2px 6px rgba(0,0,0,.25); }
@@ -33,16 +32,16 @@
     <div class="card">
       <div>⭐ XP: <span class="big" id="points">0</span></div>
       <div>🔥 Streak: <span id="streak">0</span> days</div>
-      <h3 style="margin:12px 0 6px;">🎯 Daily Maths Progress (50 Q)</h3>
-      <div class="progress-container"><div id="mathsBar" class="progress-bar">0/50</div></div>
+      <h3 style="margin:12px 0 6px;">🎯 Daily Maths Progress (500+ XP)</h3>
+      <div class="progress-container"><div id="mathsBar" class="progress-bar">0/500</div></div>
     </div>
 
     <div class="card">
       <h3>📘 Maths Topics</h3>
       <div id="topics"></div>
       <hr/>
-      <div class="row"><span>📝 Mock Test</span><button class="btn" onclick="addXP(500)">+500 XP</button></div>
-      <div class="row"><span>📖 Revision Notes</span><button class="btn" onclick="addXP(200)">+200 XP</button></div>
+      <div class="row"><span>📝 Mock Test</span><button class="btn" id="mockBtn" onclick="toggleExtra('mock',500)">Mark Done</button></div>
+      <div class="row"><span>📖 Revision Notes</span><button class="btn" id="notesBtn" onclick="toggleExtra('notes',200)">Mark Done</button></div>
     </div>
     <div class="card" style="text-align:center;">
       <button class="btn warn" onclick="resetProgress()">🔄 Reset All Progress</button>
@@ -52,9 +51,8 @@
   <!-- PAGE 2: DAILY TASKS -->
   <section id="daily" class="page">
     <div class="card">
-      <h3>📅 Daily Study Tracker</h3>
-      <div>⭐ Today’s XP: <span class="big" id="todayXP">0</span></div>
-      <div class="progress-container"><div id="dailyBar" class="progress-bar">0/6</div></div>
+      <h3>📅 Daily Study Tracker (500+ XP)</h3>
+      <div class="progress-container"><div id="dailyBar" class="progress-bar">0/500</div></div>
       <div id="dailyTasks"></div>
     </div>
   </section>
@@ -64,6 +62,7 @@
     <div class="card" style="text-align:center;">
       <div class="big">🏆 <span id="rankText">Loading...</span></div>
       <div>Total XP: <strong id="pointsRank">0</strong></div>
+      <div class="progress-container"><div id="rankBar" class="progress-bar">0%</div></div>
     </div>
     <div class="card">
       <h3>Rank Ladder</h3>
@@ -88,15 +87,16 @@
     let points = +localStorage.getItem("points") || 0;
     let streak = +localStorage.getItem("streak") || 0;
     let lastDate = localStorage.getItem("lastDate") || "";
-    let mathsProgress = +localStorage.getItem("mathsProgress") || 0;
+    let mathsXP = +localStorage.getItem("mathsXP") || 0;
     let topicProgress = JSON.parse(localStorage.getItem("topicProgress") || "{}");
-    let dailyTasks = JSON.parse(localStorage.getItem("dailyTasks") || "{}");
-    let todayXP = +localStorage.getItem("todayXP") || 0;
+    let dailyTasks = JSON.parse(localStorage.getItem("dailyTasks") || {});
+    let extras = JSON.parse(localStorage.getItem("extras") || {});
 
     const today = new Date().toDateString();
     if(today !== lastDate){
-      dailyTasks = {}; 
-      todayXP = 0;
+      dailyTasks = {};
+      mathsXP = 0;
+      extras = {};
       streak++;
       localStorage.setItem("streak", streak);
       localStorage.setItem("lastDate", today);
@@ -113,16 +113,39 @@
       const count = topicProgress[t]||0;
       row.innerHTML = `<span>${t}</span>
       <span>
-        <button class="btn" onclick="addQuestion('${t}')">+Q</button>
+        <button class="btn" id="btn-${t}">+Q</button>
         <span class="pill" id="count-${t}">${count}</span>
       </span>`;
       topicsDiv.appendChild(row);
+      document.getElementById("btn-"+t).onclick=()=>toggleQuestion(t);
     });
 
-    function addQuestion(topic){
-      topicProgress[topic] = (topicProgress[topic]||0)+1;
-      points+=10; mathsProgress++;
+    function toggleQuestion(topic){
+      if(!topicProgress[topic]) topicProgress[topic]=0;
+      if(topicProgress[topic]>0){
+        topicProgress[topic]--;
+        points-=10; mathsXP-=10;
+      } else {
+        topicProgress[topic]++;
+        points+=10; mathsXP+=10;
+      }
+      save();
       document.getElementById("count-"+topic).innerText=topicProgress[topic];
+    }
+
+    // -------------------
+    // EXTRA (Mock, Notes)
+    // -------------------
+    function toggleExtra(key,xp){
+      if(extras[key]){
+        delete extras[key];
+        points-=xp; mathsXP-=xp;
+        document.getElementById(key+"Btn").innerText="Mark Done";
+      } else {
+        extras[key]=true;
+        points+=xp; mathsXP+=xp;
+        document.getElementById(key+"Btn").innerText="✅ Done";
+      }
       save();
     }
 
@@ -130,12 +153,12 @@
     // DAILY TASKS
     // -------------------
     const DAILY = [
-      {key:"calc",label:"🧮 Calculation Practice",xp:100},
-      {key:"gkVideo",label:"📰 GK Video",xp:300},
-      {key:"gkPdf",label:"📄 GK PDF Revise",xp:100},
-      {key:"engVideo",label:"🎧 English Video",xp:300},
-      {key:"engPdf",label:"📘 English PDF Revise",xp:100},
-      {key:"reasoning",label:"🧠 Reasoning Set",xp:100}
+      {key:"calc",label:"🧮 Calculation Practice",xp:50},
+      {key:"gkVideo",label:"📰 GK Video",xp:150},
+      {key:"gkPdf",label:"📄 GK PDF Revise",xp:50},
+      {key:"engVideo",label:"🎧 English Video",xp:150},
+      {key:"engPdf",label:"📘 English PDF Revise",xp:50},
+      {key:"reasoning",label:"🧠 Reasoning Set",xp:50}
     ];
 
     const dailyDiv = document.getElementById("dailyTasks");
@@ -146,53 +169,57 @@
       row.innerHTML=`<span>${t.label} <span class="pill">+${t.xp} XP</span></span>
         <button id="btn-${t.key}" class="btn">${done?"✅ Done":"Mark Done"}</button>`;
       dailyDiv.appendChild(row);
-      document.getElementById("btn-"+t.key).onclick=()=>{
-        if(!dailyTasks[t.key]){
-          dailyTasks[t.key]=true;
-          points+=t.xp;
-          todayXP+=t.xp;
-          document.getElementById("btn-"+t.key).innerText="✅ Done";
-          save();
-        }
-      }
+      document.getElementById("btn-"+t.key).onclick=()=>toggleDaily(t.key,t.xp);
     });
 
-    function updateDailyBar(){
-      const done = DAILY.filter(t=>dailyTasks[t.key]).length;
-      const bar=document.getElementById("dailyBar");
-      const pct=Math.round(done/DAILY.length*100);
-      bar.style.width=pct+"%";
-      bar.innerText=done+"/"+DAILY.length;
-      document.getElementById("todayXP").innerText=todayXP;
+    function toggleDaily(key,xp){
+      if(dailyTasks[key]){
+        delete dailyTasks[key];
+        points-=xp;
+        document.getElementById("btn-"+key).innerText="Mark Done";
+      } else {
+        dailyTasks[key]=true;
+        points+=xp;
+        document.getElementById("btn-"+key).innerText="✅ Done";
+      }
+      save();
     }
 
     // -------------------
     // GENERAL
     // -------------------
-    function addXP(x){ points+=x; save(); }
     function resetProgress(){ if(confirm("Reset all progress?")){localStorage.clear();location.reload();} }
 
     function updateRank(){
-      let rank="Apprentice 🥉";
-      if(points>50000)rank="CGL Maths Master 🏆";
-      else if(points>25000)rank="Shortcut Ninja 🥷";
-      else if(points>10000)rank="Speed Solver ⚡";
+      let rank="Apprentice 🥉", next=10000, min=0;
+      if(points>50000){rank="CGL Maths Master 🏆"; next=points; min=50001;}
+      else if(points>25000){rank="Shortcut Ninja 🥷"; next=50000; min=25001;}
+      else if(points>10000){rank="Speed Solver ⚡"; next=25000; min=10001;}
+      const pct=Math.min(100,Math.round((points-min)/(next-min)*100));
       document.getElementById("rankText").innerText=rank;
+      document.getElementById("rankBar").style.width=pct+"%";
+      document.getElementById("rankBar").innerText=pct+"%";
     }
 
     function save(){
       localStorage.setItem("points", points);
       localStorage.setItem("streak", streak);
-      localStorage.setItem("mathsProgress", mathsProgress);
+      localStorage.setItem("mathsXP", mathsXP);
       localStorage.setItem("topicProgress", JSON.stringify(topicProgress));
       localStorage.setItem("dailyTasks", JSON.stringify(dailyTasks));
-      localStorage.setItem("todayXP", todayXP);
+      localStorage.setItem("extras", JSON.stringify(extras));
+
       document.getElementById("points").innerText=points;
       document.getElementById("pointsRank").innerText=points;
       document.getElementById("streak").innerText=streak;
-      document.getElementById("mathsBar").style.width=Math.min(mathsProgress/50*100,100)+"%";
-      document.getElementById("mathsBar").innerText=Math.min(mathsProgress,50)+"/50";
-      updateDailyBar();
+
+      document.getElementById("mathsBar").style.width=Math.round(mathsXP/500*100)+"%";
+      document.getElementById("mathsBar").innerText=mathsXP+"/500";
+
+      let dailyXP=DAILY.filter(t=>dailyTasks[t.key]).reduce((s,t)=>s+t.xp,0);
+      document.getElementById("dailyBar").style.width=Math.round(dailyXP/500*100)+"%";
+      document.getElementById("dailyBar").innerText=dailyXP+"/500";
+
       updateRank();
     }
 
@@ -207,4 +234,3 @@
   </script>
 </body>
 </html>
-    
